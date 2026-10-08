@@ -1,0 +1,498 @@
+<title>Raíz Digital TDT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: una sola pantalla tipo "terrario digital": fondo de raíces-circuito animadas, tarjeta central de pregunta, rama de progreso arriba */
+:root{
+  --soil:#0b1510;
+  --moss:#14231a;
+  --moss-2:#1c3024;
+  --line:#2a4433;
+  --ink:#e7f2e9;
+  --muted:#93ab9b;
+  --leaf:#8fe388;
+  --bio:#43e0c0;
+  --good:#2fd47a;
+  --bad:#ff3b4e;
+  --amber:#f2c14e;
+  --f-display:"Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body:"Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--soil);color:var(--ink);font-family:var(--f-body);font-size:16px;overflow-x:hidden}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,transparent 30%,rgba(5,10,7,.85) 100%)}
+.app{position:relative;z-index:1;min-height:100%;display:flex;flex-direction:column;align-items:center;padding-inline:16px;padding-block:20px 32px;gap:20px}
+header.top{width:100%;max-width:900px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.04em}
+.brand svg{width:28px;height:28px}
+.brand small{display:block;font-family:var(--f-mono);font-weight:500;font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+.iconbtn{background:var(--moss);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:8px 14px;font:600 13px var(--f-body);cursor:pointer;display:flex;gap:8px;align-items:center}
+.iconbtn:hover{border-color:var(--bio)}
+button:focus-visible{outline:3px solid var(--bio);outline-offset:3px}
+
+/* Pantalla de inicio */
+.screen{width:100%;max-width:900px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.intro{display:grid;gap:22px;justify-items:start}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--bio)}
+.intro h1{font-family:var(--f-display);font-weight:800;font-size:clamp(38px,8vw,84px);line-height:.95;margin:0;text-wrap:balance}
+.intro h1 .grow{color:var(--leaf)}
+.intro h1 .chip{color:var(--bio)}
+.intro p{max-width:58ch;color:var(--muted);font-size:18px;line-height:1.55;margin:0}
+.rules{display:flex;flex-wrap:wrap;gap:10px;padding:0;margin:0;list-style:none}
+.rules li{font-family:var(--f-mono);font-size:13px;border:1px solid var(--line);background:rgba(20,35,26,.7);padding:8px 12px;border-radius:6px}
+.rules b{color:var(--leaf)}
+.cta{font-family:var(--f-display);font-weight:700;font-size:18px;background:var(--leaf);color:#0b1510;border:0;border-radius:14px;padding:18px 30px;cursor:pointer;display:inline-flex;align-items:center;gap:12px;box-shadow:0 0 0 0 rgba(143,227,136,.5);animation:pulse 2.4s infinite}
+.cta:hover{background:#a6f09e}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(143,227,136,.45)}70%{box-shadow:0 0 0 18px rgba(143,227,136,0)}100%{box-shadow:0 0 0 0 rgba(143,227,136,0)}}
+
+/* Rama de progreso */
+.branch{width:100%;max-width:900px;display:flex;align-items:center;gap:0}
+.node{flex:1;display:flex;align-items:center}
+.node:last-child{flex:0}
+.dot{width:22px;height:22px;flex:none;border-radius:50% 0 50% 50%;transform:rotate(-45deg);border:2px solid var(--line);background:var(--soil);transition:.3s}
+.seg{height:2px;flex:1;background:var(--line)}
+.node.done-ok .dot{background:var(--good);border-color:var(--good)}
+.node.done-bad .dot{background:var(--bad);border-color:var(--bad);border-radius:3px}
+.node.now .dot{border-color:var(--bio);box-shadow:0 0 14px var(--bio)}
+.node.done-ok .seg,.node.done-bad .seg{background:linear-gradient(90deg,var(--leaf),var(--line))}
+
+/* Tarjeta de pregunta */
+.qwrap{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start}
+.qhead{min-width:0;display:grid;gap:12px}
+.meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-family:var(--f-mono);font-size:13px;color:var(--muted);letter-spacing:.06em}
+.tag{padding:4px 10px;border-radius:999px;border:1px solid var(--line);text-transform:uppercase;font-size:11px;letter-spacing:.12em}
+.tag.hard{border-color:var(--amber);color:var(--amber)}
+.tag.topic{border-color:rgba(67,224,192,.4);color:var(--bio)}
+.question{font-family:var(--f-display);font-weight:500;font-size:clamp(20px,3.2vw,30px);line-height:1.25;margin:0;text-wrap:balance}
+.timer{position:relative;width:118px;height:118px;flex:none}
+.timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer .track{fill:none;stroke:var(--moss-2);stroke-width:8}
+.timer .ring{fill:none;stroke:var(--leaf);stroke-width:8;stroke-linecap:round;transition:stroke .3s}
+.timer .num{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-mono);font-weight:700;font-size:36px;font-variant-numeric:tabular-nums}
+.timer .num small{display:block;font-size:10px;color:var(--muted);letter-spacing:.2em;text-align:center;font-weight:500}
+.timer.warn .ring{stroke:var(--amber)}
+.timer.crit .ring{stroke:var(--bad)}
+.timer.crit .num{color:var(--bad);animation:beat .5s infinite alternate}
+@keyframes beat{to{transform:scale(1.08)}}
+
+.options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px}
+.opt{min-width:0;text-align:left;display:flex;gap:14px;align-items:flex-start;background:rgba(20,35,26,.88);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:18px;font:500 17px/1.4 var(--f-body);cursor:pointer;transition:transform .15s,border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--bio);background:rgba(28,48,36,.95);transform:translateY(-2px)}
+.opt .k{flex:none;width:32px;height:32px;display:grid;place-items:center;border-radius:8px;background:var(--moss-2);font:700 14px var(--f-mono);color:var(--bio)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--good);background:rgba(47,212,122,.16)}
+.opt.right .k{background:var(--good);color:#04130a}
+.opt.wrong{border-color:var(--bad);background:rgba(255,59,78,.16)}
+.opt.wrong .k{background:var(--bad);color:#fff}
+.opt.dim{opacity:.45}
+.hint{margin-top:16px;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+
+/* Alertas */
+.alert{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:16px;animation:fadein .25s ease-out}
+.alert.bad{background:radial-gradient(circle at 50% 45%,rgba(255,59,78,.55),rgba(60,4,10,.94) 70%)}
+.alert.ok{background:radial-gradient(circle at 50% 45%,rgba(47,212,122,.5),rgba(3,40,20,.94) 70%)}
+.alert.bad .panel{animation:shake .45s}
+@keyframes fadein{from{opacity:0}}
+@keyframes shake{20%,60%{transform:translateX(-14px)}40%,80%{transform:translateX(14px)}}
+.panel{max-width:640px;width:100%;display:grid;justify-items:center;text-align:center;gap:14px}
+.badge{width:min(42vw,190px);height:min(42vw,190px);border-radius:50%;display:grid;place-items:center;animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+.alert.bad .badge{background:var(--bad);box-shadow:0 0 80px rgba(255,59,78,.8)}
+.alert.ok .badge{background:var(--good);box-shadow:0 0 80px rgba(47,212,122,.8)}
+.badge svg{width:58%;height:58%}
+.badge path{fill:none;stroke:#fff;stroke-width:14;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:200;stroke-dashoffset:200;animation:draw .45s .2s forwards}
+@keyframes pop{from{transform:scale(.2);opacity:0}}
+@keyframes draw{to{stroke-dashoffset:0}}
+.verdict{font-family:var(--f-display);font-weight:800;font-size:clamp(34px,7vw,64px);margin:0;letter-spacing:.02em}
+.answer{font-size:18px;margin:0;font-weight:600}
+.explain{color:#d8e7dc;line-height:1.55;margin:0;max-width:56ch;font-size:16px}
+.next{margin-top:8px;font:700 16px var(--f-display);border:2px solid #fff;background:transparent;color:#fff;border-radius:12px;padding:14px 26px;cursor:pointer}
+.next:hover{background:#fff;color:#0b1510}
+
+/* Resultado */
+.result{display:grid;gap:20px;justify-items:start}
+.score{font-family:var(--f-display);font-weight:800;font-size:clamp(70px,16vw,160px);line-height:.9;margin:0;color:var(--leaf);font-variant-numeric:tabular-nums}
+.score span{color:var(--muted);font-size:.4em}
+.result h2{font-family:var(--f-display);font-size:clamp(22px,4vw,34px);margin:0;text-wrap:balance}
+.result p{color:var(--muted);max-width:58ch;line-height:1.55;margin:0;font-size:17px}
+.recap{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;width:100%;padding:0;margin:0;list-style:none}
+.recap li{font-size:13px;padding:10px 12px;border-radius:8px;background:rgba(20,35,26,.85);border:1px solid var(--line);display:flex;gap:8px;align-items:center;min-width:0}
+.recap li b{font-family:var(--f-mono);flex:none}
+.recap li.ok b{color:var(--good)}
+.recap li.bad b{color:var(--bad)}
+
+@media (max-width:640px){
+  .qwrap{grid-template-columns:1fr}
+  .timer{width:92px;height:92px;justify-self:end;order:-1;margin-bottom:-60px}
+  .timer .num{font-size:28px}
+  .options{grid-template-columns:1fr}
+  .qhead{padding-right:100px}
+  .dot{width:16px;height:16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.badge path{stroke-dashoffset:0}}
+</style>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="vignette"></div>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 30V14M16 14c0-6 5-10 12-10 0 7-5 11-12 10zM16 18c0-5-4-8-10-8 0 6 4 9 10 8" fill="none" stroke="#8fe388" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="30" r="2" fill="#43e0c0"/><path d="M16 30h-8M16 30h8" stroke="#43e0c0" stroke-width="1.6"/></svg>
+      <div>Raíz Digital<small>TDT Hamburguesas · TI + Ambiente</small></div>
+    </div>
+    <button class="iconbtn" id="mute" type="button" aria-pressed="false">🔊 Sonido</button>
+  </header>
+
+  <nav class="branch" id="branch" hidden aria-label="Progreso"></nav>
+
+  <main class="screen" id="screen"></main>
+</div>
+
+<div id="alertHost"></div>
+
+<script>
+const QUESTIONS = [
+  {topic:"Huella digital", hard:false,
+   q:"¿Qué es la “huella de carbono digital”?",
+   opts:["Las emisiones de gases de efecto invernadero que generan los dispositivos, las redes y los centros de datos que usamos","La cantidad de datos personales que dejamos en internet","El espacio que ocupa un archivo en la nube","El rastro de clics que registra una página web"],
+   a:0, ex:"Cada correo, video y respaldo en la nube consume electricidad en equipos y centros de datos. Esa energía, según cómo se produzca, emite CO₂."},
+  {topic:"Facturación", hard:false,
+   q:"En las cajas de TDT, ¿qué ventaja ambiental tiene la factura electrónica frente al tiquete impreso en papel térmico?",
+   opts:["Ninguna, el papel térmico se recicla igual que el papel normal","Evita el papel térmico, que suele llevar químicos como BPA o BPS y no se puede reciclar con el papel común","Hace que la impresora consuma más tinta","Solo sirve para pagar menos impuestos"],
+   a:1, ex:"El papel térmico no usa tinta: reacciona al calor gracias a recubrimientos químicos (BPA/BPS). Esos químicos contaminan el reciclaje de papel, por eso va a la basura común."},
+  {topic:"Residuos RAEE", hard:false,
+   q:"Un datáfono, una cámara o un computador de una sede se daña sin arreglo. ¿Qué es lo correcto?",
+   opts:["Botarlo en la caneca de reciclaje de plásticos","Guardarlo indefinidamente en la bodega","Entregarlo a un gestor autorizado de residuos de aparatos eléctricos y electrónicos (RAEE)","Desarmarlo y botar las piezas por separado en la basura"],
+   a:2, ex:"Los RAEE contienen metales pesados (plomo, mercurio, cadmio) y también materiales recuperables. En Colombia la Ley 1672 de 2013 regula su gestión: van a un gestor autorizado."},
+  {topic:"Cocina", hard:false,
+   q:"Las pantallas de cocina (KDS) que muestran los pedidos al equipo de plancha, ¿qué impacto ambiental reducen?",
+   opts:["El uso de gas en la plancha","La impresión de comandas en papel y su desperdicio","El consumo de agua al lavar","El ruido dentro de la cocina"],
+   a:1, ex:"Cada pedido deja de imprimirse en una comanda de papel térmico. Con cientos de pedidos diarios por sede, el ahorro de papel y rollos es grande."},
+  {topic:"Domicilios", hard:false,
+   q:"En los pedidos por apps de domicilio, ¿qué práctica tecnológica reduce más los desechables?",
+   opts:["Enviar siempre cubiertos y servilletas extra por si acaso","Imprimir el pedido dos veces para confirmar","Que la app pregunte si el cliente quiere cubiertos y salsas, y por defecto no los incluya","Usar bolsas más grandes"],
+   a:2, ex:"Cuando la opción por defecto es “sin cubiertos”, solo los reciben quienes los piden. Es un cambio de configuración simple que evita miles de desechables al mes."},
+  {topic:"Cámaras / CCTV", hard:false,
+   q:"Las cámaras de las sedes graban 24/7. ¿Qué configuración reduce más el almacenamiento y la energía del grabador?",
+   opts:["Grabar por detección de movimiento y usar compresión H.265","Subir todas las cámaras a máxima resolución y 30 fps","Grabar en continuo y además copiar todo a una USB","Desactivar la compresión para que el video se vea mejor"],
+   a:0, ex:"H.265 ocupa cerca de la mitad del espacio que H.264 con calidad similar, y grabar por eventos evita guardar horas de pasillo vacío. Menos discos, menos energía, menos equipos que reemplazar."},
+  {topic:"Centros de datos", hard:true,
+   q:"¿Qué mide el indicador PUE (Power Usage Effectiveness) de un centro de datos?",
+   opts:["La energía de los equipos de TI dividida entre la energía total de la instalación; lo ideal es 0","La energía total de la instalación dividida entre la energía que consumen solo los equipos de TI; lo ideal es acercarse a 1,0","El porcentaje de energía renovable que compra el centro de datos","La temperatura promedio de los servidores"],
+   a:1, ex:"PUE = energía total ÷ energía de TI. Un PUE de 1,5 significa que por cada kWh de servidores se gasta 0,5 kWh extra en enfriamiento, iluminación y pérdidas. El mínimo teórico es 1,0."},
+  {topic:"GHG Protocol", hard:true,
+   q:"Si TDT usa un sistema POS en la nube, según el GHG Protocol, ¿cómo se clasifican las emisiones del centro de datos del proveedor?",
+   opts:["Alcance 1: emisiones directas de TDT","Alcance 2: electricidad comprada por TDT","Alcance 3: emisiones indirectas de la cadena de valor (servicios comprados)","No se reportan porque el servidor no es de TDT"],
+   a:2, ex:"Alcance 1 son fuentes propias (gas de cocina), Alcance 2 la electricidad que compran las sedes, y Alcance 3 todo lo indirecto de la cadena de valor, como un servicio en la nube contratado."},
+  {topic:"Energía", hard:true,
+   q:"Cada sede tiene un grabador (NVR) de 40 W encendido 24 horas, los 365 días. ¿Cuánta energía consumen al año los NVR de 14 sedes?",
+   opts:["Unos 490 kWh","Unos 350 kWh","Unos 4.900 kWh (≈ 4,9 MWh)","Unos 49.000 kWh (≈ 49 MWh)"],
+   a:2, ex:"40 W × 24 h × 365 días = 350,4 kWh por sede. × 14 sedes = 4.905,6 kWh al año. Por eso elegir equipos eficientes y bien dimensionados sí pesa en la factura y en las emisiones."},
+  {topic:"Refrigeración", hard:true,
+   q:"Para los congeladores de carne y refrigeradores de las sedes, ¿qué refrigerante tiene el menor potencial de calentamiento global (GWP)?",
+   opts:["R-404A","R-134a","R-22","R-290 (propano)"],
+   a:3, ex:"El R-290 tiene un GWP cercano a 3, frente a unos 1.430 del R-134a y casi 3.900 del R-404A. El R-22 además daña la capa de ozono y está en eliminación (Protocolo de Montreal)."}
+];
+
+const TIME = 30;
+const PER_GAME = 5, HARD_PER_GAME = 2;
+let ROUND = [], lastRound = [];
+/* Cada jugador recibe 5 de las 10: 2 difíciles + 3 normales, en orden aleatorio.
+   Se priorizan preguntas que el jugador anterior no vio. */
+function pickRound(){
+  const fresh = q => !lastRound.includes(q);
+  function take(pool, n){
+    const a = shuffle(pool.filter(fresh)), b = shuffle(pool.filter(q=>!fresh(q)));
+    return a.concat(b).slice(0, n);
+  }
+  const hard = take(QUESTIONS.filter(q=>q.hard), HARD_PER_GAME);
+  const easy = take(QUESTIONS.filter(q=>!q.hard), PER_GAME - HARD_PER_GAME);
+  const r = shuffle(easy.concat(hard));
+  lastRound = r;
+  return r;
+}
+const $ = s => document.querySelector(s);
+const screen = $("#screen"), branch = $("#branch"), alertHost = $("#alertHost");
+let idx = 0, results = [], timeLeft = TIME, timerId = null, locked = false, order = [];
+let muted = false;
+
+/* ---------- Audio (Web Audio API, sin archivos) ---------- */
+let ctx = null;
+function ac(){ if(!ctx){ try{ ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(ctx && ctx.state==="suspended") ctx.resume(); return ctx; }
+function tone({f=440,type="sine",t=0,d=.15,g=.2,slide=null}){
+  const c = ac(); if(!c || muted) return;
+  const o = c.createOscillator(), v = c.createGain(), s = c.currentTime + t;
+  o.type = type; o.frequency.setValueAtTime(f, s);
+  if(slide) o.frequency.exponentialRampToValueAtTime(slide, s + d);
+  v.gain.setValueAtTime(0.0001, s);
+  v.gain.exponentialRampToValueAtTime(g, s + .01);
+  v.gain.exponentialRampToValueAtTime(0.0001, s + d);
+  o.connect(v).connect(c.destination); o.start(s); o.stop(s + d + .05);
+}
+function soundTick(sec){
+  // "tock" de madera + latido electrónico; se acelera al final
+  const urgent = sec <= 10;
+  tone({f: urgent ? 1100 : 820, type:"triangle", d:.06, g: urgent ? .22 : .14});
+  tone({f: urgent ? 140 : 110, type:"sine", d:.12, g:.18, slide:70});
+  if(sec <= 5) tone({f:1400, type:"triangle", t:.5, d:.05, g:.18});
+}
+function soundOk(){
+  [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone({f,type:"sine",t:i*.09,d:.35,g:.22}));
+  [1318.5,1568].forEach((f,i)=>tone({f,type:"triangle",t:.36+i*.08,d:.25,g:.08}));
+}
+function soundBad(){
+  tone({f:220,type:"sawtooth",d:.55,g:.18,slide:90});
+  tone({f:233,type:"square",d:.55,g:.08,slide:95});
+  tone({f:110,type:"sawtooth",t:.05,d:.6,g:.12,slide:55});
+}
+$("#mute").addEventListener("click", e=>{
+  muted = !muted;
+  e.currentTarget.setAttribute("aria-pressed", muted);
+  e.currentTarget.textContent = muted ? "🔇 Silencio" : "🔊 Sonido";
+});
+
+/* ---------- Pantallas ---------- */
+function intro(){
+  branch.hidden = true;
+  screen.innerHTML = `
+    <section class="intro">
+      <div class="eyebrow">Evento TDT · Reto de tecnología y ambiente</div>
+      <h1>Donde la <span class="chip">tecnología</span><br>echa <span class="grow">raíces</span></h1>
+      <p>5 preguntas al azar sobre TI y medio ambiente, y sobre el impacto de la tecnología que usamos en TDT Hamburguesas: cajas, cocina, cámaras, domicilios y refrigeración.</p>
+      <ul class="rules">
+        <li><b>5</b> preguntas al azar</li>
+        <li><b>2</b> de nivel difícil</li>
+        <li><b>30 s</b> por pregunta</li>
+        <li>Teclas <b>1–4</b> para responder</li>
+      </ul>
+      <button class="cta" id="start" type="button">Empezar el reto <span aria-hidden="true">→</span></button>
+    </section>`;
+  $("#start").addEventListener("click", start);
+}
+
+function start(){
+  ac(); idx = 0; results = [];
+  ROUND = pickRound();
+  buildBranch(); branch.hidden = false;
+  showQuestion();
+}
+
+function buildBranch(){
+  let h = "";
+  for(let i=0;i<ROUND.length;i++){
+    h += '<div class="node" data-i="'+i+'"><span class="dot"></span>' + (i<ROUND.length-1 ? '<span class="seg"></span>' : '') + '</div>';
+  }
+  branch.innerHTML = h;
+}
+function optionsHTML(Q){
+  let h = "";
+  order.forEach(function(oi,k){
+    h += '<button class="opt" type="button" id="opt'+k+'" data-oi="'+oi+'"><span class="k">'+(k+1)+'</span><span>'+Q.opts[oi]+'</span></button>';
+  });
+  return h;
+}
+function paintBranch(){
+  branch.querySelectorAll(".node").forEach((n,i)=>{
+    n.className = "node" + (results[i]===true?" done-ok":results[i]===false?" done-bad":"") + (i===idx && results[i]===undefined?" now":"");
+  });
+}
+
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function showQuestion(){
+  const Q = ROUND[idx];
+  locked = false; timeLeft = TIME;
+  order = shuffle([0,1,2,3]);
+  paintBranch();
+  const C = 2*Math.PI*52;
+  screen.innerHTML = `
+    <section>
+      <div class="qwrap">
+        <div class="qhead">
+          <div class="meta">
+            <span>PREGUNTA ${String(idx+1).padStart(2,"0")} / ${ROUND.length}</span>
+            <span class="tag topic">${Q.topic}</span>
+            ${Q.hard?'<span class="tag hard">Difícil</span>':''}
+          </div>
+          <h2 class="question">${Q.q}</h2>
+        </div>
+        <div class="timer" id="timer" role="timer" aria-live="off">
+          <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="ring" id="ring" cx="60" cy="60" r="52" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg>
+          <div class="num"><div><span id="secs">${TIME}</span><small>SEG</small></div></div>
+        </div>
+      </div>
+      <div class="options" id="opts">
+        ${optionsHTML(Q)}
+      </div>
+      <div class="hint">Responde con clic o con las teclas 1, 2, 3 o 4.</div>
+    </section>`;
+  screen.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>answer(+b.dataset.oi, b)));
+  clearInterval(timerId);
+  soundTick(TIME);
+  timerId = setInterval(()=>{
+    timeLeft--;
+    updateTimer(C);
+    if(timeLeft<=0){ clearInterval(timerId); answer(null, null); }
+    else soundTick(timeLeft);
+  },1000);
+}
+
+function updateTimer(C){
+  const t = $("#timer"); if(!t) return;
+  $("#secs").textContent = Math.max(0,timeLeft);
+  $("#ring").setAttribute("stroke-dashoffset", C*(1-Math.max(0,timeLeft)/TIME));
+  t.classList.toggle("warn", timeLeft<=15 && timeLeft>5);
+  t.classList.toggle("crit", timeLeft<=5);
+}
+
+function answer(oi, btn){
+  if(locked) return; locked = true;
+  clearInterval(timerId);
+  const Q = ROUND[idx];
+  const ok = oi === Q.a;
+  results[idx] = ok;
+  screen.querySelectorAll(".opt").forEach(b=>{
+    b.disabled = true;
+    const v = +b.dataset.oi;
+    if(v===Q.a) b.classList.add("right");
+    else if(b===btn) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  paintBranch();
+  ok ? soundOk() : soundBad();
+  showAlert(ok, oi===null, Q);
+}
+
+function showAlert(ok, timeout, Q){
+  const icon = ok
+    ? '<svg viewBox="0 0 100 100"><path d="M24 52 L43 70 L77 32"/></svg>'
+    : '<svg viewBox="0 0 100 100"><path d="M30 30 L70 70 M70 30 L30 70"/></svg>';
+  const last = idx === ROUND.length-1;
+  const verdict = ok ? "¡Correcto!" : (timeout ? "¡Se acabó el tiempo!" : "Incorrecto");
+  let h = '<div class="alert ' + (ok ? 'ok' : 'bad') + '" role="alertdialog" aria-modal="true" aria-labelledby="verdict">';
+  h += '<div class="panel">';
+  h += '<div class="badge">' + icon + '</div>';
+  h += '<p class="verdict" id="verdict">' + verdict + '</p>';
+  if(!ok) h += '<p class="answer">Respuesta correcta: ' + Q.opts[Q.a] + '</p>';
+  h += '<p class="explain">' + Q.ex + '</p>';
+  h += '<button class="next" id="next" type="button">' + (last ? 'Ver resultado' : 'Siguiente pregunta') + ' →</button>';
+  h += '</div></div>';
+  alertHost.innerHTML = h;
+  const n = $("#next"); n.focus();
+  n.addEventListener("click", next);
+}
+
+function next(){
+  alertHost.innerHTML = "";
+  idx++;
+  if(idx < ROUND.length) showQuestion(); else finish();
+}
+
+function recapHTML(){
+  let h = "";
+  ROUND.forEach(function(q,i){
+    h += '<li class="' + (results[i] ? 'ok' : 'bad') + '"><b>' + (results[i] ? '✓' : '✕') + '</b><span>' + String(i+1).padStart(2,"0") + ' · ' + q.topic + '</span></li>';
+  });
+  return h;
+}
+
+function finish(){
+  paintBranch();
+  const score = results.filter(Boolean).length;
+  const hardTotal = ROUND.filter(q=>q.hard).length;
+  const hardOk = ROUND.reduce((s,q,i)=>s+(q.hard&&results[i]?1:0),0);
+  const msg = score>=5 ? ["Raíz profunda","Dominas la relación entre la tecnología y el ambiente. Eres referente para tu sede."]
+            : score>=4 ? ["Árbol en crecimiento","Muy buen nivel. Te faltaron unos detalles técnicos para llegar a la cima."]
+            : score>=2 ? ["Brote digital","Vas por buen camino. Repasa los temas de energía, residuos electrónicos y refrigeración."]
+            : ["Semilla","Es el comienzo. Cada respuesta que aprendiste hoy es un cambio que podemos aplicar en las sedes."];
+  screen.innerHTML = `
+    <section class="result">
+      <div class="eyebrow">Resultado final</div>
+      <p class="score">${score}<span>/${ROUND.length}</span></p>
+      <h2>${msg[0]}</h2>
+      <p>${msg[1]} Acertaste ${hardOk} de ${hardTotal} preguntas difíciles.</p>
+      <ul class="recap">
+        ${recapHTML()}
+      </ul>
+      <button class="cta" id="again" type="button">Siguiente participante <span aria-hidden="true">↻</span></button>
+    </section>`;
+  $("#again").addEventListener("click", start);
+}
+
+document.addEventListener("keydown", e=>{
+  if(alertHost.firstElementChild){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); next(); } return; }
+  const k = parseInt(e.key,10);
+  if(k>=1 && k<=4 && !locked && $("#opt0")){ const b = $("#opt"+(k-1)); answer(+b.dataset.oi, b); }
+});
+
+/* ---------- Fondo: raíces que crecen como pistas de circuito ---------- */
+(function(){
+  const cv = $("#bg"), g = cv.getContext("2d");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let W, H, roots = [], pulses = [];
+  const DIRS = [[0,1],[1,1],[-1,1],[1,0],[-1,0]];
+  function build(){
+    const dpr = Math.min(devicePixelRatio||1, 2);
+    W = cv.width = innerWidth*dpr; H = cv.height = innerHeight*dpr;
+    g.setTransform(1,0,0,1,0,0);
+    roots = []; pulses = [];
+    const step = 26*dpr, count = Math.max(6, Math.round(innerWidth/120));
+    for(let r=0;r<count;r++){
+      let x = (r+.5)*(W/count) + (Math.random()-.5)*40, y = -10;
+      grow(x,y,step,0,32+Math.random()*14, r%2===0 ? "leaf":"bio");
+    }
+  }
+  function grow(x,y,step,depth,len,kind){
+    const pts = [[x,y]]; let d = DIRS[0];
+    for(let i=0;i<len;i++){
+      if(Math.random()<.35) d = DIRS[Math.floor(Math.random()*DIRS.length)];
+      if(d[1]===0 && Math.random()<.5) d = DIRS[0];
+      x += d[0]*step; y += d[1]*step*(d[1]?1:0) + (d[1]===0?0:0);
+      pts.push([x,y]);
+      if(depth<2 && Math.random()<.08) grow(x,y,step,depth+1,len*.5,kind);
+      if(y>H) break;
+    }
+    roots.push({pts,depth,kind,drawn:reduce?pts.length:0});
+  }
+  function color(kind,a){ return kind==="leaf" ? `rgba(143,227,136,${a})` : `rgba(67,224,192,${a})`; }
+  function frame(){
+    g.clearRect(0,0,W,H);
+    roots.forEach(r=>{
+      if(r.drawn < r.pts.length) r.drawn += .35;
+      const n = Math.floor(r.drawn);
+      g.strokeStyle = color(r.kind, .16 - r.depth*.04);
+      g.lineWidth = (2.2 - r.depth*.6) * (W/innerWidth);
+      g.beginPath();
+      for(let i=0;i<=Math.min(n,r.pts.length-1);i++){ const p=r.pts[i]; i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]); }
+      g.stroke();
+      for(let i=4;i<=Math.min(n,r.pts.length-1);i+=7){
+        const p = r.pts[i];
+        g.fillStyle = color(r.kind,.35); g.beginPath(); g.arc(p[0],p[1],3*(W/innerWidth),0,7); g.fill();
+      }
+    });
+    if(!reduce && Math.random()<.06 && roots.length){
+      const r = roots[Math.floor(Math.random()*roots.length)];
+      if(r.drawn>=r.pts.length) pulses.push({r,t:0});
+    }
+    pulses = pulses.filter(p=>{
+      p.t += .25; const i = Math.floor(p.t); if(i>=p.r.pts.length-1) return false;
+      const a = p.r.pts[i], b = p.r.pts[i+1], f = p.t-i;
+      const x = a[0]+(b[0]-a[0])*f, y = a[1]+(b[1]-a[1])*f;
+      const rad = 14*(W/innerWidth);
+      const grd = g.createRadialGradient(x,y,0,x,y,rad);
+      grd.addColorStop(0,color(p.r.kind,.9)); grd.addColorStop(1,color(p.r.kind,0));
+      g.fillStyle = grd; g.beginPath(); g.arc(x,y,rad,0,7); g.fill();
+      return true;
+    });
+    if(!reduce) requestAnimationFrame(frame);
+  }
+  build(); frame();
+  let rt; addEventListener("resize",()=>{clearTimeout(rt); rt=setTimeout(()=>{build(); if(reduce) frame();},200);});
+})();
+
+intro();
+</script>
