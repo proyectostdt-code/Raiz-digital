@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Raíz Digital TDT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -134,6 +139,10 @@ button:focus-visible{outline:3px solid var(--bio);outline-offset:3px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.badge path{stroke-dashoffset:0}}
 </style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
 
 <canvas id="bg" aria-hidden="true"></canvas>
 <div class="vignette"></div>
@@ -169,9 +178,9 @@ const QUESTIONS = [
    opts:["Botarlo en la caneca de reciclaje de plásticos","Guardarlo indefinidamente en la bodega","Entregarlo a un gestor autorizado de residuos de aparatos eléctricos y electrónicos (RAEE)","Desarmarlo y botar las piezas por separado en la basura"],
    a:2, ex:"Los RAEE contienen metales pesados (plomo, mercurio, cadmio) y también materiales recuperables. En Colombia la Ley 1672 de 2013 regula su gestión: van a un gestor autorizado."},
   {topic:"Cocina", hard:false,
-   q:"Las pantallas de cocina (KDS) que muestran los pedidos al equipo de plancha, ¿qué impacto ambiental reducen?",
-   opts:["El uso de gas en la plancha","La impresión de comandas en papel y su desperdicio","El consumo de agua al lavar","El ruido dentro de la cocina"],
-   a:1, ex:"Cada pedido deja de imprimirse en una comanda de papel térmico. Con cientos de pedidos diarios por sede, el ahorro de papel y rollos es grande."},
+   q:"Con cada pedido sale de la impresora un papelito para el parrillero. Después de usarlo en la cocina, ¿en qué caneca va?",
+   opts:["En la blanca, con el papel y cartón reciclable","En la negra, de residuos no aprovechables","En la verde, con los orgánicos","Se puede guardar y reutilizar para otro pedido"],
+   a:1, ex:"Ese papelito es papel térmico: tiene químicos (BPA o BPS) que contaminan el reciclaje de papel, y en la cocina además se impregna de grasa. Por eso va a la caneca negra, según el código de colores vigente en Colombia (Resolución 2184 de 2019)."},
   {topic:"Domicilios", hard:false,
    q:"En los pedidos por apps de domicilio, ¿qué práctica tecnológica reduce más los desechables?",
    opts:["Enviar siempre cubiertos y servilletas extra por si acaso","Imprimir el pedido dos veces para confirmar","Que la app pregunte si el cliente quiere cubiertos y salsas, y por defecto no los incluya","Usar bolsas más grandes"],
@@ -496,3 +505,6 @@ document.addEventListener("keydown", e=>{
 
 intro();
 </script>
+
+</body>
+</html>
